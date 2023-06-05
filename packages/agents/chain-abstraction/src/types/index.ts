@@ -32,12 +32,13 @@ export type SwapAndXCallParams = Static<typeof SwapAndXCallParamsSchema>;
 
 export const UniV2SwapperParamsSchema = Type.Object({
   amountOutMin: TIntegerString,
+  path: Type.Array(TAddress),
 });
 export type UniV2SwapperParams = Static<typeof UniV2SwapperParamsSchema>;
 
 export const UniV3SwapperParamsSchema = Type.Object({
-  poolFee: TIntegerString,
   amountOutMin: TIntegerString,
+  path: Type.String(),
 });
 export type UniV3SwapperParams = Static<typeof UniV3SwapperParamsSchema>;
 

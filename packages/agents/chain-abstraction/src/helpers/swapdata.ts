@@ -58,7 +58,7 @@ export const getOriginSwapDataForOneInch = async (args: OriginSwapDataCallbackAr
  */
 export const getDestinationSwapDataForUniV2 = async (_args: any): Promise<string> => {
   const args = _args as UniV2SwapperParams;
-  return defaultAbiCoder.encode(["uint256"], [args.amountOutMin]);
+  return defaultAbiCoder.encode(["uint256", "address[]"], [args.amountOutMin, args.path]);
 };
 
 /**
@@ -66,7 +66,7 @@ export const getDestinationSwapDataForUniV2 = async (_args: any): Promise<string
  */
 export const getDestinationSwapDataForUniV3 = async (_args: any): Promise<string> => {
   const args = _args as UniV3SwapperParams;
-  return defaultAbiCoder.encode(["uint24", "uint256"], [args.poolFee, args.amountOutMin]);
+  return defaultAbiCoder.encode(["uint256", "bytes"], [args.amountOutMin, args.path]);
 };
 
 /**
