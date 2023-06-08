@@ -1,9 +1,11 @@
-import { constants } from "ethers";
-import { defaultAbiCoder } from "ethers/lib/utils";
+import { constants, ethers } from "ethers";
 import { jsonifyError } from "@connext/nxtp-utils";
+import { AlphaRouter, ChainId, SwapOptionsSwapRouter02, SwapRoute, SwapType } from "@uniswap/smart-order-router";
+import { TradeType, CurrencyAmount, Percent } from "@uniswap/sdk-core";
 
 import { axiosGet } from "../mockable";
-import { UniV2SwapperParams, UniV3SwapperParams } from "../types";
+import { DestinationSwapForwarderParams } from "../types";
+import { Token } from "@uniswap/sdk-core";
 
 export type OriginSwapDataCallbackArgs = {
   chainId: number;
@@ -14,7 +16,7 @@ export type OriginSwapDataCallbackArgs = {
   slippage?: number;
 };
 export type OriginSwapDataCallback = (args: OriginSwapDataCallbackArgs) => Promise<string>;
-export type DestinationSwapDataCallback = (args: any) => Promise<string>;
+export type DestinationSwapDataCallback = (args: DestinationSwapForwarderParams) => Promise<string>;
 
 // ==================================== ORIGIN SIDE ==================================== //
 /**
@@ -56,22 +58,46 @@ export const getOriginSwapDataForOneInch = async (args: OriginSwapDataCallbackAr
 /**
  * Returns the `swapData` which will be used on the destination univ2 swapper
  */
-export const getDestinationSwapDataForUniV2 = async (_args: any): Promise<string> => {
-  const args = _args as UniV2SwapperParams;
-  return defaultAbiCoder.encode(["uint256", "address[]"], [args.amountOutMin, args.path]);
+export const getDestinationSwapDataForUniV2 = async (args: DestinationSwapForwarderParams): Promise<string> => {
+  return "";
+  //return defaultAbiCoder.encode(["uint256", "address[]"], [args.amountOutMin, args.path]);
 };
 
 /**
  * Returns the `swapData` which will be used on the destination univ3 swapper
  */
-export const getDestinationSwapDataForUniV3 = async (_args: any): Promise<string> => {
-  const args = _args as UniV3SwapperParams;
-  return defaultAbiCoder.encode(["uint256", "bytes"], [args.amountOutMin, args.path]);
+export const getDestinationSwapDataForUniV3 = async (args: DestinationSwapForwarderParams): Promise<string> => {
+  const route = await generateRoute(args);
+
+  //return defaultAbiCoder.encode(["uint256", "bytes"], [args.amountOutMin, args.path]);
 };
 
 /**
  * Returns the `swapData` which will be used on the destination 1inch swapper
  */
-export const getDestinationSwapDataForOneInch = async (_args: any): Promise<string> => {
+export const getDestinationSwapDataForOneInch = async (_args: DestinationSwapForwarderParams): Promise<string> => {
   throw new Error("ToDo");
 };
+
+export async function generateRoute(args: DestinationSwapForwarderParams): Promise<SwapRoute | null> {
+  const router = new AlphaRouter({
+    chainId: ChainId.MAINNET,
+    provider: new ethers.providers.JsonRpcProvider("mainnet rpc"),
+  });
+
+  const options: SwapOptionsSwapRouter02 = {
+    recipient: args.fromAddress,
+    slippageTolerance: new Percent(args.slippage ?? 5, 100),
+    deadline: Math.floor(Date.now() / 1000 + 1800),
+    type: SwapType.SWAP_ROUTER_02,
+  };
+
+  const route = await router.route(
+    CurrencyAmount.fromRawAmount(new Token(args.chainId, args.fromAsset, 18, "USDC", "USD//C"), args.amountIn),
+    new Token(args.chainId, args.toAsset, 18, "USDC", "USD//C"),
+    TradeType.EXACT_INPUT,
+    options,
+  );
+
+  return route;
+}

@@ -1,5 +1,5 @@
 import { Type, Static } from "@sinclair/typebox";
-import { TAddress, TIntegerString } from "@connext/nxtp-utils";
+import { TAddress, TChainId, TIntegerString } from "@connext/nxtp-utils";
 
 export const Swapper = {
   UniV2: "UniV2",
@@ -43,8 +43,13 @@ export const UniV3SwapperParamsSchema = Type.Object({
 export type UniV3SwapperParams = Static<typeof UniV3SwapperParamsSchema>;
 
 export const DestinationSwapForwarderParamsSchema = Type.Object({
+  chainId: TChainId,
+  fromAsset: TAddress,
   toAsset: TAddress,
-  swapData: Type.Union([UniV2SwapperParamsSchema, UniV3SwapperParamsSchema]), // UniV2SwapperParamsSchema isn't currently supported
+  amountOutMin: TIntegerString,
+  amountIn: TIntegerString,
+  fromAddress: TAddress,
+  slippage: Type.Optional(TIntegerString),
 });
 export type DestinationSwapForwarderParams = Static<typeof DestinationSwapForwarderParamsSchema>;
 
